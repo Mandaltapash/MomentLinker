@@ -770,9 +770,9 @@
           isFixedMode = false;
         }
 
-        // Bounded translation inside the middle container (no scale distortion!)
-        const maxTranslateX = (Math.random() - 0.5) * 120; // -60px to +60px
-        const maxTranslateY = (Math.random() - 0.5) * 36;  // -18px to +18px
+        // Bounded translation inside the middle container (-40px to +40px X, -15px to +15px Y)
+        const maxTranslateX = (Math.random() - 0.5) * 80; // -40px to +40px
+        const maxTranslateY = (Math.random() - 0.5) * 30; // -15px to +15px
 
         if (isFourthAttempt) {
           isFrozenState = true;
@@ -782,7 +782,8 @@
             y: maxTranslateY,
             scale: 1,
             rotation: 0,
-            duration: 0.15,
+            duration: 0.08,
+            ease: "none",
             onComplete: () => {
               isDodging = false;
               clearTimeout(freezeTimeoutId);
@@ -793,13 +794,14 @@
           });
         } else {
           if (Math.random() > 0.4) showMemeToast();
+          const fastDuration = 0.08 + Math.random() * 0.04; // 0.08s to 0.12s (80-120ms)
           safeGsapTo(noBtn, {
             x: maxTranslateX,
             y: maxTranslateY,
             scale: 1,
-            rotation: (Math.random() - 0.5) * 10,
-            duration: 0.2,
-            ease: "power2.out",
+            rotation: (Math.random() - 0.5) * 8,
+            duration: fastDuration,
+            ease: "power1.out",
             onComplete: () => { isDodging = false; }
           });
         }
