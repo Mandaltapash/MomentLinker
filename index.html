@@ -738,12 +738,15 @@
     const yesBtn = document.getElementById('btn-yes');
     const mainCard = document.getElementById('main-card');
     let noClickCount = 0;
+    let dodgeAttemptCount = 0;
     let isDodging = false;
     let isFixedMode = false;
+    let isSlowDodgeState = false;
 
     function dodgeNoButton() {
       if (isDodging) return;
       isDodging = true;
+      dodgeAttemptCount++;
       playBoingSound();
 
       const btnWidth = noBtn.offsetWidth || 90;
@@ -778,6 +781,17 @@
         isFixedMode = true;
       }
 
+      // Every 4th dodge attempt, NO button gets tired & moves slowly so it can be clicked!
+      isSlowDodgeState = (dodgeAttemptCount % 4 === 0);
+      const moveDuration = isSlowDodgeState ? 1.4 : 0.4;
+      const moveEase = isSlowDodgeState ? "power1.out" : "back.out(1.5)";
+
+      if (isSlowDodgeState) {
+        showCustomToast("NO button got tired! 🐢 Quick, click it! 🎯");
+      } else if (Math.random() > 0.4) {
+        showMemeToast();
+      }
+
       safeGsapTo(noBtn, {
         left: targetX,
         top: targetY,
@@ -785,12 +799,10 @@
         y: 0,
         rotation: randomRot,
         scale: randomScale,
-        duration: 0.4,
-        ease: "back.out(1.5)",
+        duration: moveDuration,
+        ease: moveEase,
         onComplete: () => { isDodging = false; }
       });
-
-      if (Math.random() > 0.3) showMemeToast();
     }
 
     // Cross-Device Proximity Checking (Mouse, Touch, iPad)
@@ -801,7 +813,10 @@
       const btnCenterY = rect.top + rect.height / 2;
       const dist = Math.hypot(clientX - btnCenterX, clientY - btnCenterY);
 
-      if (dist < 110) {
+      // In slow dodge mode, reduce trigger radius to 45px so user can easily tap/click it
+      const triggerRadius = isSlowDodgeState ? 45 : 110;
+
+      if (dist < triggerRadius) {
         dodgeNoButton();
       }
     }
@@ -814,12 +829,14 @@
     }, { passive: true });
 
     noBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      dodgeNoButton();
+      e.stopPropagation();
       handleNoClick();
     });
 
-    noBtn.addEventListener('click', handleNoClick);
+    noBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleNoClick();
+    });
 
     /* ==========================================================================
        4. REACTION SCREENS ON NO CLICK
@@ -836,6 +853,12 @@
 
     function handleNoClick() {
       noClickCount++;
+      const sName = (typeof senderName !== 'undefined' && senderName) ? senderName : "Sender";
+      showCustomToast(`You caught NO! 😱 But ${sName} still loves you! ❤️`);
+
+      // Reset slow state so next dodge is fast again
+      isSlowDodgeState = false;
+
       // Cap scale factor to prevent mobile viewport overflow
       const maxAllowed = window.innerWidth < 480 ? 1.25 : 1.4;
       const newScale = Math.min(maxAllowed, 1 + (noClickCount * 0.08));
@@ -866,6 +889,27 @@
         "Loading better decision... ⏳",
         "Nice try! 😜"
       ];
+    }
+
+    function showCustomToast(text) {
+      const toast = document.createElement('div');
+      toast.className = 'meme-toast';
+      toast.innerText = text;
+      document.body.appendChild(toast);
+
+      toast.style.left = `${Math.max(100, Math.min(window.innerWidth - 180, window.innerWidth / 2))}px`;
+      toast.style.top = `${Math.max(80, Math.min(window.innerHeight - 100, 100))}px`;
+
+      safeGsapTo(toast, {
+        scale: 1,
+        opacity: 1,
+        duration: 0.25,
+        onComplete: () => {
+          setTimeout(() => {
+            safeGsapTo(toast, { y: "-=25", opacity: 0, duration: 0.3, onComplete: () => toast.remove() });
+          }, 1400);
+        }
+      });
     }
 
     function showMemeToast() {
