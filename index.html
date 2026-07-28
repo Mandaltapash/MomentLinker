@@ -770,26 +770,28 @@
           isFixedMode = false;
         }
 
-        // Bounded translation inside the middle container (-40px to +40px X, -15px to +15px Y)
-        const maxTranslateX = (Math.random() - 0.5) * 80; // -40px to +40px
-        const maxTranslateY = (Math.random() - 0.5) * 30; // -15px to +15px
+        // Enforce minimum 35px to 80px jump distance inside card so movement is always distinct and fast!
+        const signX = Math.random() > 0.5 ? 1 : -1;
+        const maxTranslateX = signX * (35 + Math.random() * 45); 
+        const signY = Math.random() > 0.5 ? 1 : -1;
+        const maxTranslateY = signY * (10 + Math.random() * 20);
 
         if (isFourthAttempt) {
           isFrozenState = true;
-          showCustomToast("NO button stopped for 1.5s! ⏱️ Click it! 🎯");
+          showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
           safeGsapTo(noBtn, {
             x: maxTranslateX,
             y: maxTranslateY,
             scale: 1,
             rotation: 0,
-            duration: 0.05,
+            duration: 0.06,
             ease: "power4.out",
             onComplete: () => {
               isDodging = false;
               clearTimeout(freezeTimeoutId);
               freezeTimeoutId = setTimeout(() => {
                 isFrozenState = false;
-              }, 1500);
+              }, 1000);
             }
           });
         } else {
@@ -799,7 +801,7 @@
             y: maxTranslateY,
             scale: 1,
             rotation: (Math.random() - 0.5) * 6,
-            duration: 0.05,
+            duration: 0.06,
             ease: "power4.out",
             onComplete: () => { isDodging = false; }
           });
@@ -835,7 +837,7 @@
 
         if (isFourthAttempt) {
           isFrozenState = true;
-          showCustomToast("NO button stopped for 1.5s! ⏱️ Click it! 🎯");
+          showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
           safeGsapTo(noBtn, {
             left: targetX,
             top: targetY,
@@ -843,13 +845,14 @@
             y: 0,
             scale: 1,
             rotation: 0,
-            duration: 0.15,
+            duration: 0.08,
+            ease: "power4.out",
             onComplete: () => {
               isDodging = false;
               clearTimeout(freezeTimeoutId);
               freezeTimeoutId = setTimeout(() => {
                 isFrozenState = false;
-              }, 1500);
+              }, 1000);
             }
           });
         } else {
@@ -860,9 +863,9 @@
             x: 0,
             y: 0,
             scale: 1,
-            rotation: (Math.random() - 0.5) * 15,
-            duration: 0.25,
-            ease: "power2.out",
+            rotation: (Math.random() - 0.5) * 12,
+            duration: 0.1,
+            ease: "power4.out",
             onComplete: () => { isDodging = false; }
           });
         }
@@ -886,7 +889,7 @@
       const btnCenterY = rect.top + rect.height / 2;
       const dist = Math.hypot(clientX - btnCenterX, clientY - btnCenterY);
 
-      if (dist < 85) {
+      if (dist < 100) {
         dodgeNoButton();
       }
     }
