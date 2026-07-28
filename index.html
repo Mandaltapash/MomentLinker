@@ -741,14 +741,15 @@
       const randomScale = 0.85 + Math.random() * 0.3;
 
       if (!isFixedMode) {
-        // Convert to fixed positioning on first dodge so it breaks out of card containers
+        // Move button directly to <body> so CSS transform/backdrop-filter on glass-card does not constrain position: fixed
         const initialRect = noBtn.getBoundingClientRect();
+        document.body.appendChild(noBtn);
         noBtn.style.position = 'fixed';
         noBtn.style.left = `${initialRect.left}px`;
         noBtn.style.top = `${initialRect.top}px`;
         noBtn.style.right = 'auto';
         noBtn.style.margin = '0';
-        noBtn.style.zIndex = '9999';
+        noBtn.style.zIndex = '99999';
         isFixedMode = true;
       }
 
