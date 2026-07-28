@@ -756,78 +756,114 @@
       playBoingSound();
 
       const isFourthAttempt = (dodgeAttemptCount % 4 === 0);
-      const btnWidth = noBtn.offsetWidth || 90;
-      const btnHeight = noBtn.offsetHeight || 44;
-
-      if (!isFixedMode) {
-        const initialRect = noBtn.getBoundingClientRect();
-        document.body.appendChild(noBtn);
-        noBtn.style.position = 'fixed';
-        noBtn.style.left = `${initialRect.left}px`;
-        noBtn.style.top = `${initialRect.top}px`;
-        noBtn.style.right = 'auto';
-        noBtn.style.margin = '0';
-        noBtn.style.zIndex = '99999';
-        isFixedMode = true;
-      }
-
-      let minX, maxX, minY, maxY;
 
       if (noClickCount < 7) {
-        // RULE 1: First 7 clicks -> Bounded strictly INSIDE 100% of #main-card (full middle box area)
-        const cardRect = mainCard.getBoundingClientRect();
-        const pad = 10;
-        minX = cardRect.left + pad;
-        maxX = Math.max(minX, cardRect.right - btnWidth - pad);
-        minY = cardRect.top + pad;
-        maxY = Math.max(minY, cardRect.bottom - btnHeight - pad);
+        // RULE 1: First 7 clicks -> 100% GPU-Accelerated Dodge across FULL #main-card box area!
+        if (isFixedMode) {
+          const buttonZone = document.getElementById('button-zone');
+          buttonZone.appendChild(noBtn);
+          noBtn.style.position = 'relative';
+          noBtn.style.left = '0';
+          noBtn.style.top = '0';
+          noBtn.style.zIndex = '99';
+          isFixedMode = false;
+        }
+
+        // Bounded to cover 100% of mainCard dimensions (-125px to +125px X, -160px to +35px Y)
+        const targetX = (Math.random() - 0.5) * 240; 
+        const targetY = -155 + Math.random() * 190;
+
+        if (isFourthAttempt) {
+          isFrozenState = true;
+          showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
+          safeGsapTo(noBtn, {
+            x: targetX,
+            y: targetY,
+            scale: 1,
+            rotation: 0,
+            duration: 0.06,
+            ease: "power2.out",
+            onComplete: () => {
+              isDodging = false;
+              clearTimeout(freezeTimeoutId);
+              freezeTimeoutId = setTimeout(() => {
+                isFrozenState = false;
+              }, 1000);
+            }
+          });
+        } else {
+          if (Math.random() > 0.4) showMemeToast();
+          safeGsapTo(noBtn, {
+            x: targetX,
+            y: targetY,
+            scale: 1,
+            rotation: (Math.random() - 0.5) * 10,
+            duration: 0.06,
+            ease: "power2.out",
+            onComplete: () => { isDodging = false; }
+          });
+        }
       } else {
-        // RULE 2: After 7 clicks -> Roams OUTSIDE across the ENTIRE display!
+        // RULE 2: After 7 clicks -> Roams OUTSIDE across the ENTIRE display screen!
+        if (!isFixedMode) {
+          const initialRect = noBtn.getBoundingClientRect();
+          document.body.appendChild(noBtn);
+          noBtn.style.position = 'fixed';
+          noBtn.style.left = `${initialRect.left}px`;
+          noBtn.style.top = `${initialRect.top}px`;
+          noBtn.style.right = 'auto';
+          noBtn.style.margin = '0';
+          noBtn.style.zIndex = '99999';
+          isFixedMode = true;
+        }
+
+        const btnWidth = noBtn.offsetWidth || 90;
+        const btnHeight = noBtn.offsetHeight || 44;
         const padX = 16;
         const padTop = 70;
         const padBottom = 25;
-        minX = padX;
-        maxX = Math.max(minX, window.innerWidth - btnWidth - padX);
-        minY = padTop;
-        maxY = Math.max(minY, window.innerHeight - btnHeight - padBottom);
-      }
+        const minX = padX;
+        const maxX = Math.max(minX, window.innerWidth - btnWidth - padX);
+        const minY = padTop;
+        const maxY = Math.max(minY, window.innerHeight - btnHeight - padBottom);
 
-      const targetX = minX + Math.random() * (maxX - minX);
-      const targetY = minY + Math.random() * (maxY - minY);
+        const targetX = minX + Math.random() * (maxX - minX);
+        const targetY = minY + Math.random() * (maxY - minY);
 
-      if (isFourthAttempt) {
-        isFrozenState = true;
-        showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
-        safeGsapTo(noBtn, {
-          left: targetX,
-          top: targetY,
-          x: 0,
-          y: 0,
-          scale: 1,
-          rotation: 0,
-          duration: 0.1,
-          ease: "power2.out",
-          onComplete: () => {
-            isDodging = false;
-            clearTimeout(freezeTimeoutId);
-            freezeTimeoutId = setTimeout(() => {
-              isFrozenState = false;
-            }, 1000);
-          }
-        });
-      } else {
-        if (Math.random() > 0.4) showMemeToast();
-        safeGsapTo(noBtn, {
-          left: targetX,
-          top: targetY,
-          x: 0,
-          y: 0,
-          scale: 1,
-          rotation: (Math.random() - 0.5) * 12,
-          duration: 0.1,
-          ease: "power2.out",
-          onComplete: () => { isDodging = false; }
-        });
+        if (isFourthAttempt) {
+          isFrozenState = true;
+          showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
+          safeGsapTo(noBtn, {
+            left: targetX,
+            top: targetY,
+            x: 0,
+            y: 0,
+            scale: 1,
+            rotation: 0,
+            duration: 0.08,
+            ease: "power2.out",
+            onComplete: () => {
+              isDodging = false;
+              clearTimeout(freezeTimeoutId);
+              freezeTimeoutId = setTimeout(() => {
+                isFrozenState = false;
+              }, 1000);
+            }
+          });
+        } else {
+          if (Math.random() > 0.4) showMemeToast();
+          safeGsapTo(noBtn, {
+            left: targetX,
+            top: targetY,
+            x: 0,
+            y: 0,
+            scale: 1,
+            rotation: (Math.random() - 0.5) * 12,
+            duration: 0.08,
+            ease: "power2.out",
+            onComplete: () => { isDodging = false; }
+          });
+        }
       }
     }
 
