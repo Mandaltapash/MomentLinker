@@ -382,7 +382,7 @@
       .glass-card {
         padding: 24px 16px;
         border-radius: 28px;
-        overflow: hidden;
+        overflow: visible;
       }
       .title-main {
         font-size: 1.45rem;
@@ -399,6 +399,9 @@
       }
       .btn-yes {
         max-width: 85vw;
+      }
+      .btn-no {
+        z-index: 999;
       }
       .grid-2 {
         grid-template-columns: 1fr;
@@ -717,18 +720,20 @@
       isDodging = true;
       playBoingSound();
 
-      const zone = document.getElementById('button-zone');
-      const zoneWidth = zone ? zone.clientWidth : 320;
+      const card = document.getElementById('main-card');
+      const cardWidth = card ? card.clientWidth : 320;
       const noWidth = noBtn ? noBtn.offsetWidth : 90;
 
-      // Ensure NO button never moves out of the card boundary
-      // x = 0 is default right-aligned position. x < 0 shifts left inside card.
-      const minX = -(zoneWidth - noWidth - 15);
-      const maxX = 0; // Never shift right past card edge
+      // Ensure NO button stays 100% inside the visible card boundaries
+      // minX moves left inside card (away from right: 15px position)
+      const minX = -(cardWidth - noWidth - 30);
+      const maxX = 0; // Never move right past padding boundary
       
       const randomX = minX + Math.random() * (maxX - minX);
-      const randomY = (Math.random() - 0.5) * 50;
-      const randomRot = (Math.random() - 0.5) * 45;
+      const randomY = (Math.random() - 0.5) * 40;
+      const randomRot = (Math.random() - 0.5) * 30;
+
+      noBtn.style.zIndex = "999";
 
       safeGsapTo(noBtn, {
         x: randomX,
