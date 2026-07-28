@@ -756,119 +756,78 @@
       playBoingSound();
 
       const isFourthAttempt = (dodgeAttemptCount % 4 === 0);
+      const btnWidth = noBtn.offsetWidth || 90;
+      const btnHeight = noBtn.offsetHeight || 44;
 
-      // RULE 1: First 7 clicks -> NO button stays INSIDE container (#button-zone)
-      // RULE 2: After 7 clicks -> NO button roams OUTSIDE across the ENTIRE display!
+      if (!isFixedMode) {
+        const initialRect = noBtn.getBoundingClientRect();
+        document.body.appendChild(noBtn);
+        noBtn.style.position = 'fixed';
+        noBtn.style.left = `${initialRect.left}px`;
+        noBtn.style.top = `${initialRect.top}px`;
+        noBtn.style.right = 'auto';
+        noBtn.style.margin = '0';
+        noBtn.style.zIndex = '99999';
+        isFixedMode = true;
+      }
+
+      let minX, maxX, minY, maxY;
+
       if (noClickCount < 7) {
-        if (isFixedMode) {
-          const buttonZone = document.getElementById('button-zone');
-          buttonZone.appendChild(noBtn);
-          noBtn.style.position = 'relative';
-          noBtn.style.left = '0';
-          noBtn.style.top = '0';
-          noBtn.style.zIndex = '99';
-          isFixedMode = false;
-        }
-
-        // Enforce minimum 35px to 80px jump distance inside card so movement is always distinct and fast!
-        const signX = Math.random() > 0.5 ? 1 : -1;
-        const maxTranslateX = signX * (35 + Math.random() * 45); 
-        const signY = Math.random() > 0.5 ? 1 : -1;
-        const maxTranslateY = signY * (10 + Math.random() * 20);
-
-        if (isFourthAttempt) {
-          isFrozenState = true;
-          showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
-          safeGsapTo(noBtn, {
-            x: maxTranslateX,
-            y: maxTranslateY,
-            scale: 1,
-            rotation: 0,
-            duration: 0.06,
-            ease: "power4.out",
-            onComplete: () => {
-              isDodging = false;
-              clearTimeout(freezeTimeoutId);
-              freezeTimeoutId = setTimeout(() => {
-                isFrozenState = false;
-              }, 1000);
-            }
-          });
-        } else {
-          if (Math.random() > 0.4) showMemeToast();
-          safeGsapTo(noBtn, {
-            x: maxTranslateX,
-            y: maxTranslateY,
-            scale: 1,
-            rotation: (Math.random() - 0.5) * 6,
-            duration: 0.06,
-            ease: "power4.out",
-            onComplete: () => { isDodging = false; }
-          });
-        }
-
+        // RULE 1: First 7 clicks -> Bounded strictly INSIDE #main-card (middle box)
+        const cardRect = mainCard.getBoundingClientRect();
+        const padX = 12;
+        minX = cardRect.left + padX;
+        maxX = Math.max(minX, cardRect.right - btnWidth - padX);
+        minY = cardRect.top + 70; // keep inside card box, below title
+        maxY = Math.max(minY, cardRect.bottom - btnHeight - padX);
       } else {
-        // AFTER 7 CLICKS: FULL DISPLAY ROAMING (outside card, body level)
-        const btnWidth = noBtn.offsetWidth || 90;
-        const btnHeight = noBtn.offsetHeight || 44;
-        const paddingX = 16;
-        const paddingTop = 70;
-        const paddingBottom = 25;
+        // RULE 2: After 7 clicks -> Roams OUTSIDE across the ENTIRE display!
+        const padX = 16;
+        const padTop = 70;
+        const padBottom = 25;
+        minX = padX;
+        maxX = Math.max(minX, window.innerWidth - btnWidth - padX);
+        minY = padTop;
+        maxY = Math.max(minY, window.innerHeight - btnHeight - padBottom);
+      }
 
-        const minX = paddingX;
-        const maxX = Math.max(minX, window.innerWidth - btnWidth - paddingX);
-        const minY = paddingTop;
-        const maxY = Math.max(minY, window.innerHeight - btnHeight - paddingBottom);
+      const targetX = minX + Math.random() * (maxX - minX);
+      const targetY = minY + Math.random() * (maxY - minY);
 
-        const targetX = minX + Math.random() * (maxX - minX);
-        const targetY = minY + Math.random() * (maxY - minY);
-
-        if (!isFixedMode) {
-          const initialRect = noBtn.getBoundingClientRect();
-          document.body.appendChild(noBtn);
-          noBtn.style.position = 'fixed';
-          noBtn.style.left = `${initialRect.left}px`;
-          noBtn.style.top = `${initialRect.top}px`;
-          noBtn.style.right = 'auto';
-          noBtn.style.margin = '0';
-          noBtn.style.zIndex = '99999';
-          isFixedMode = true;
-        }
-
-        if (isFourthAttempt) {
-          isFrozenState = true;
-          showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
-          safeGsapTo(noBtn, {
-            left: targetX,
-            top: targetY,
-            x: 0,
-            y: 0,
-            scale: 1,
-            rotation: 0,
-            duration: 0.08,
-            ease: "power4.out",
-            onComplete: () => {
-              isDodging = false;
-              clearTimeout(freezeTimeoutId);
-              freezeTimeoutId = setTimeout(() => {
-                isFrozenState = false;
-              }, 1000);
-            }
-          });
-        } else {
-          if (Math.random() > 0.4) showMemeToast();
-          safeGsapTo(noBtn, {
-            left: targetX,
-            top: targetY,
-            x: 0,
-            y: 0,
-            scale: 1,
-            rotation: (Math.random() - 0.5) * 12,
-            duration: 0.1,
-            ease: "power4.out",
-            onComplete: () => { isDodging = false; }
-          });
-        }
+      if (isFourthAttempt) {
+        isFrozenState = true;
+        showCustomToast("NO button stopped for 1s! ⏱️ Click it! 🎯");
+        safeGsapTo(noBtn, {
+          left: targetX,
+          top: targetY,
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotation: 0,
+          duration: 0.1,
+          ease: "power2.out",
+          onComplete: () => {
+            isDodging = false;
+            clearTimeout(freezeTimeoutId);
+            freezeTimeoutId = setTimeout(() => {
+              isFrozenState = false;
+            }, 1000);
+          }
+        });
+      } else {
+        if (Math.random() > 0.4) showMemeToast();
+        safeGsapTo(noBtn, {
+          left: targetX,
+          top: targetY,
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotation: (Math.random() - 0.5) * 12,
+          duration: 0.1,
+          ease: "power2.out",
+          onComplete: () => { isDodging = false; }
+        });
       }
     }
 
