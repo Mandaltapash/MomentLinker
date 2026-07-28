@@ -380,18 +380,25 @@
     /* Responsive */
     @media (max-width: 480px) {
       .glass-card {
-        padding: 28px 20px;
+        padding: 24px 16px;
         border-radius: 28px;
+        overflow: hidden;
       }
       .title-main {
-        font-size: 1.55rem;
+        font-size: 1.45rem;
       }
       .subtitle-text {
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
       .btn {
-        padding: 14px 28px;
-        font-size: 1.1rem;
+        padding: 12px 20px;
+        font-size: 1rem;
+        max-width: 85vw;
+        white-space: normal;
+        word-break: break-word;
+      }
+      .btn-yes {
+        max-width: 85vw;
       }
       .grid-2 {
         grid-template-columns: 1fr;
@@ -758,7 +765,10 @@
 
     function handleNoClick() {
       noClickCount++;
-      safeGsapTo(yesBtn, { scale: 1 + (noClickCount * 0.12), duration: 0.3 });
+      // Cap scale factor to prevent mobile viewport overflow
+      const maxAllowed = window.innerWidth < 480 ? 1.25 : 1.4;
+      const newScale = Math.min(maxAllowed, 1 + (noClickCount * 0.08));
+      safeGsapTo(yesBtn, { scale: newScale, duration: 0.3 });
 
       const screenIdx = Math.min(noClickCount - 1, screensData.length - 1);
       const data = screensData[screenIdx];
@@ -819,6 +829,8 @@
       spawnHeartRain();
 
       safeGsapTo(noBtn, { opacity: 0, display: "none" });
+      // Reset YES button scale back to 1.0 so it never overflows mobile screens!
+      safeGsapTo(yesBtn, { scale: 1.0, duration: 0.3 });
 
       safeGsapTo(mainCard, {
         scale: 1.03,
