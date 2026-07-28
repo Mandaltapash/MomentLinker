@@ -774,13 +774,13 @@
       let minX, maxX, minY, maxY;
 
       if (noClickCount < 7) {
-        // RULE 1: First 7 clicks -> Bounded strictly INSIDE #main-card (middle box)
+        // RULE 1: First 7 clicks -> Bounded strictly INSIDE 100% of #main-card (full middle box area)
         const cardRect = mainCard.getBoundingClientRect();
-        const padX = 12;
-        minX = cardRect.left + padX;
-        maxX = Math.max(minX, cardRect.right - btnWidth - padX);
-        minY = cardRect.top + 70; // keep inside card box, below title
-        maxY = Math.max(minY, cardRect.bottom - btnHeight - padX);
+        const pad = 10;
+        minX = cardRect.left + pad;
+        maxX = Math.max(minX, cardRect.right - btnWidth - pad);
+        minY = cardRect.top + pad;
+        maxY = Math.max(minY, cardRect.bottom - btnHeight - pad);
       } else {
         // RULE 2: After 7 clicks -> Roams OUTSIDE across the ENTIRE display!
         const padX = 16;
