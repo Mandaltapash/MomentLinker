@@ -734,6 +734,9 @@
     /* ==========================================================================
        3. EVASIVE NO BUTTON PHYSICS & FULL VIEWPORT ROAMING
        ========================================================================== */
+    /* ==========================================================================
+       3. EVASIVE NO BUTTON PHYSICS & FULL VIEWPORT ROAMING
+       ========================================================================== */
     const noBtn = document.getElementById('btn-no');
     const yesBtn = document.getElementById('btn-yes');
     const mainCard = document.getElementById('main-card');
@@ -741,82 +744,149 @@
     let dodgeAttemptCount = 0;
     let isDodging = false;
     let isFixedMode = false;
-    let isSlowDodgeState = false;
+    let isFrozenState = false;
+    let freezeTimeoutId = null;
 
     function dodgeNoButton() {
-      if (isDodging) return;
+      if (isDodging || isFrozenState) return;
       isDodging = true;
       dodgeAttemptCount++;
       playBoingSound();
 
       const btnWidth = noBtn.offsetWidth || 90;
       const btnHeight = noBtn.offsetHeight || 44;
+      const isFourthAttempt = (dodgeAttemptCount % 4 === 0);
 
-      // Safe viewport boundaries for full screen roaming (Mobile, Tablet, Desktop)
-      const paddingX = 16;
-      const paddingTop = 70; // Leave space for top control pills
-      const paddingBottom = 25;
+      // RULE 1: First 7 clicks -> NO button stays INSIDE the middle box (#button-zone)
+      // RULE 2: After 7 clicks -> NO button roams OUTSIDE across the ENTIRE display!
+      if (noClickCount < 7) {
+        if (isFixedMode) {
+          const buttonZone = document.getElementById('button-zone');
+          buttonZone.appendChild(noBtn);
+          noBtn.style.position = 'absolute';
+          noBtn.style.left = 'auto';
+          noBtn.style.right = '20px';
+          noBtn.style.top = '0';
+          noBtn.style.zIndex = '999';
+          isFixedMode = false;
+        }
 
-      const minX = paddingX;
-      const maxX = Math.max(minX, window.innerWidth - btnWidth - paddingX);
-      const minY = paddingTop;
-      const maxY = Math.max(minY, window.innerHeight - btnHeight - paddingBottom);
+        const buttonZone = document.getElementById('button-zone');
+        const zoneW = buttonZone.clientWidth || 300;
+        const zoneH = buttonZone.clientHeight || 70;
 
-      // Pick random target coordinates anywhere across the entire display
-      const targetX = minX + Math.random() * (maxX - minX);
-      const targetY = minY + Math.random() * (maxY - minY);
-      const randomRot = (Math.random() - 0.5) * 60;
-      const randomScale = 0.85 + Math.random() * 0.3;
+        const minX = 5;
+        const maxX = Math.max(minX, zoneW - btnWidth - 5);
+        const minY = -5;
+        const maxY = Math.max(minY, zoneH - btnHeight + 5);
 
-      if (!isFixedMode) {
-        // Move button directly to <body> so CSS transform/backdrop-filter on glass-card does not constrain position: fixed
-        const initialRect = noBtn.getBoundingClientRect();
-        document.body.appendChild(noBtn);
-        noBtn.style.position = 'fixed';
-        noBtn.style.left = `${initialRect.left}px`;
-        noBtn.style.top = `${initialRect.top}px`;
-        noBtn.style.right = 'auto';
-        noBtn.style.margin = '0';
-        noBtn.style.zIndex = '99999';
-        isFixedMode = true;
+        const targetX = minX + Math.random() * (maxX - minX);
+        const targetY = minY + Math.random() * (maxY - minY);
+        const randomRot = (Math.random() - 0.5) * 30;
+
+        if (isFourthAttempt) {
+          isFrozenState = true;
+          showCustomToast("NO button stopped for 2.5s! ⏱️ Click it! 🎯");
+          safeGsapTo(noBtn, {
+            left: targetX,
+            top: targetY,
+            rotation: 0,
+            scale: 1,
+            duration: 0.25,
+            onComplete: () => {
+              isDodging = false;
+              clearTimeout(freezeTimeoutId);
+              freezeTimeoutId = setTimeout(() => {
+                isFrozenState = false;
+              }, 2500);
+            }
+          });
+        } else {
+          if (Math.random() > 0.4) showMemeToast();
+          safeGsapTo(noBtn, {
+            left: targetX,
+            top: targetY,
+            rotation: randomRot,
+            scale: 0.95,
+            duration: 0.35,
+            ease: "back.out(1.5)",
+            onComplete: () => { isDodging = false; }
+          });
+        }
+
+      } else {
+        // AFTER 7 CLICKS: FULL DISPLAY ROAMING (outside card, body level)
+        const paddingX = 16;
+        const paddingTop = 70;
+        const paddingBottom = 25;
+
+        const minX = paddingX;
+        const maxX = Math.max(minX, window.innerWidth - btnWidth - paddingX);
+        const minY = paddingTop;
+        const maxY = Math.max(minY, window.innerHeight - btnHeight - paddingBottom);
+
+        const targetX = minX + Math.random() * (maxX - minX);
+        const targetY = minY + Math.random() * (maxY - minY);
+        const randomRot = (Math.random() - 0.5) * 60;
+        const randomScale = 0.85 + Math.random() * 0.3;
+
+        if (!isFixedMode) {
+          const initialRect = noBtn.getBoundingClientRect();
+          document.body.appendChild(noBtn);
+          noBtn.style.position = 'fixed';
+          noBtn.style.left = `${initialRect.left}px`;
+          noBtn.style.top = `${initialRect.top}px`;
+          noBtn.style.right = 'auto';
+          noBtn.style.margin = '0';
+          noBtn.style.zIndex = '99999';
+          isFixedMode = true;
+        }
+
+        if (isFourthAttempt) {
+          isFrozenState = true;
+          showCustomToast("NO button stopped for 2.5s! ⏱️ Click it! 🎯");
+          safeGsapTo(noBtn, {
+            left: targetX,
+            top: targetY,
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 1,
+            duration: 0.25,
+            onComplete: () => {
+              isDodging = false;
+              clearTimeout(freezeTimeoutId);
+              freezeTimeoutId = setTimeout(() => {
+                isFrozenState = false;
+              }, 2500);
+            }
+          });
+        } else {
+          if (Math.random() > 0.4) showMemeToast();
+          safeGsapTo(noBtn, {
+            left: targetX,
+            top: targetY,
+            x: 0,
+            y: 0,
+            rotation: randomRot,
+            scale: randomScale,
+            duration: 0.4,
+            ease: "back.out(1.5)",
+            onComplete: () => { isDodging = false; }
+          });
+        }
       }
-
-      // Every 4th dodge attempt, NO button gets tired & moves slowly so it can be clicked!
-      isSlowDodgeState = (dodgeAttemptCount % 4 === 0);
-      const moveDuration = isSlowDodgeState ? 1.4 : 0.4;
-      const moveEase = isSlowDodgeState ? "power1.out" : "back.out(1.5)";
-
-      if (isSlowDodgeState) {
-        showCustomToast("NO button got tired! 🐢 Quick, click it! 🎯");
-      } else if (Math.random() > 0.4) {
-        showMemeToast();
-      }
-
-      safeGsapTo(noBtn, {
-        left: targetX,
-        top: targetY,
-        x: 0,
-        y: 0,
-        rotation: randomRot,
-        scale: randomScale,
-        duration: moveDuration,
-        ease: moveEase,
-        onComplete: () => { isDodging = false; }
-      });
     }
 
     // Cross-Device Proximity Checking (Mouse, Touch, iPad)
     function checkProximity(clientX, clientY) {
-      if (!noBtn || noBtn.style.display === 'none') return;
+      if (!noBtn || noBtn.style.display === 'none' || isFrozenState) return;
       const rect = noBtn.getBoundingClientRect();
       const btnCenterX = rect.left + rect.width / 2;
       const btnCenterY = rect.top + rect.height / 2;
       const dist = Math.hypot(clientX - btnCenterX, clientY - btnCenterY);
 
-      // In slow dodge mode, reduce trigger radius to 45px so user can easily tap/click it
-      const triggerRadius = isSlowDodgeState ? 45 : 110;
-
-      if (dist < triggerRadius) {
+      if (dist < 100) {
         dodgeNoButton();
       }
     }
@@ -853,11 +923,18 @@
 
     function handleNoClick() {
       noClickCount++;
-      const sName = (typeof senderName !== 'undefined' && senderName) ? senderName : "Sender";
-      showCustomToast(`You caught NO! 😱 But ${sName} still loves you! ❤️`);
+      isFrozenState = false;
+      clearTimeout(freezeTimeoutId);
 
-      // Reset slow state so next dodge is fast again
-      isSlowDodgeState = false;
+      const sName = (typeof senderName !== 'undefined' && senderName) ? senderName : "Sender";
+
+      if (noClickCount < 7) {
+        showCustomToast(`Click ${noClickCount}/7! You caught NO! 😱 (${7 - noClickCount} left inside box)`);
+      } else if (noClickCount === 7) {
+        showCustomToast("7 Clicks Reached! 🚀 NO button is now roaming the ENTIRE display! 🌟");
+      } else {
+        showCustomToast(`You caught NO! 😱 But ${sName} still loves you! ❤️`);
+      }
 
       // Cap scale factor to prevent mobile viewport overflow
       const maxAllowed = window.innerWidth < 480 ? 1.25 : 1.4;
