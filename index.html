@@ -254,10 +254,15 @@
       background: linear-gradient(135deg, #ff477e, #e11d48);
       color: white;
       box-shadow: 0 10px 30px var(--pink-glow);
-      z-index: 999;
-      position: absolute;
-      right: 20px;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 99;
+      position: relative;
+      right: auto;
+      top: auto;
+      margin: 0;
+      width: auto;
+      max-width: 140px;
+      transform-origin: center center;
+      transition: transform 0.25s ease;
     }
 
     .btn-create {
@@ -863,15 +868,24 @@
       }
     }
 
-    // Cross-Device Proximity Checking (Mouse, Touch, iPad)
+    // Cross-Device Proximity Checking with Scroll Guard (Mouse, Touch, iPad)
+    let isPageScrolling = false;
+    let pageScrollTimer = null;
+
+    window.addEventListener('scroll', () => {
+      isPageScrolling = true;
+      clearTimeout(pageScrollTimer);
+      pageScrollTimer = setTimeout(() => { isPageScrolling = false; }, 250);
+    }, { passive: true });
+
     function checkProximity(clientX, clientY) {
-      if (!noBtn || noBtn.style.display === 'none' || isFrozenState) return;
+      if (!noBtn || noBtn.style.display === 'none' || isFrozenState || isPageScrolling) return;
       const rect = noBtn.getBoundingClientRect();
       const btnCenterX = rect.left + rect.width / 2;
       const btnCenterY = rect.top + rect.height / 2;
       const dist = Math.hypot(clientX - btnCenterX, clientY - btnCenterY);
 
-      if (dist < 90) {
+      if (dist < 85) {
         dodgeNoButton();
       }
     }
@@ -882,16 +896,6 @@
         checkProximity(e.touches[0].clientX, e.touches[0].clientY);
       }
     }, { passive: true });
-
-    noBtn.addEventListener('touchstart', (e) => {
-      e.stopPropagation();
-      handleNoClick();
-    });
-
-    noBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleNoClick();
-    });
 
     /* ==========================================================================
        4. REACTION SCREENS ON NO CLICK
@@ -906,7 +910,17 @@
       { sticker: stickers.screen7, title: "One last chance please. 🥺", subtitle: '"Pretty please with a cherry on top? 🍒"' }
     ];
 
-    function handleNoClick() {
+    let lastNoClickTime = 0;
+    function handleNoClick(e) {
+      if (e) {
+        if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const now = Date.now();
+      if (now - lastNoClickTime < 400) return; // Prevent double firing on touch devices!
+      lastNoClickTime = now;
+
       noClickCount++;
       isFrozenState = false;
       clearTimeout(freezeTimeoutId);
@@ -921,9 +935,9 @@
         showCustomToast(`You caught NO! 😱 But ${sName} still loves you! ❤️`);
       }
 
-      // Cap scale factor to prevent mobile viewport overflow
+      // Cap scale factor for YES button to prevent mobile viewport overflow
       const maxAllowed = window.innerWidth < 480 ? 1.25 : 1.4;
-      const newScale = Math.min(maxAllowed, 1 + (noClickCount * 0.08));
+      const newScale = Math.min(maxAllowed, 1 + (noClickCount * 0.06));
       safeGsapTo(yesBtn, { scale: newScale, duration: 0.3 });
 
       const screenIdx = Math.min(noClickCount - 1, screensData.length - 1);
@@ -940,6 +954,9 @@
         }
       });
     }
+
+    noBtn.addEventListener('touchstart', (e) => handleNoClick(e), { passive: false });
+    noBtn.addEventListener('click', (e) => handleNoClick(e));
 
     function getMemeMessages() {
       const sName = (typeof senderName !== 'undefined' && senderName) ? senderName : "Sender";
