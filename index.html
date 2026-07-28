@@ -732,10 +732,7 @@
     }
 
     /* ==========================================================================
-       3. EVASIVE NO BUTTON PHYSICS & FULL VIEWPORT ROAMING
-       ========================================================================== */
-    /* ==========================================================================
-       3. EVASIVE NO BUTTON PHYSICS & FULL VIEWPORT ROAMING
+       3. EVASIVE NO BUTTON PHYSICS & CONTAINER / FULL VIEWPORT ROAMING
        ========================================================================== */
     const noBtn = document.getElementById('btn-no');
     const yesBtn = document.getElementById('btn-yes');
@@ -753,45 +750,33 @@
       dodgeAttemptCount++;
       playBoingSound();
 
-      const btnWidth = noBtn.offsetWidth || 90;
-      const btnHeight = noBtn.offsetHeight || 44;
       const isFourthAttempt = (dodgeAttemptCount % 4 === 0);
 
-      // RULE 1: First 7 clicks -> NO button stays INSIDE the middle box (#button-zone)
+      // RULE 1: First 7 clicks -> NO button stays INSIDE container (#button-zone)
       // RULE 2: After 7 clicks -> NO button roams OUTSIDE across the ENTIRE display!
       if (noClickCount < 7) {
         if (isFixedMode) {
           const buttonZone = document.getElementById('button-zone');
           buttonZone.appendChild(noBtn);
-          noBtn.style.position = 'absolute';
-          noBtn.style.left = 'auto';
-          noBtn.style.right = '20px';
+          noBtn.style.position = 'relative';
+          noBtn.style.left = '0';
           noBtn.style.top = '0';
-          noBtn.style.zIndex = '999';
+          noBtn.style.zIndex = '99';
           isFixedMode = false;
         }
 
-        const buttonZone = document.getElementById('button-zone');
-        const zoneW = buttonZone.clientWidth || 300;
-        const zoneH = buttonZone.clientHeight || 70;
-
-        const minX = 5;
-        const maxX = Math.max(minX, zoneW - btnWidth - 5);
-        const minY = -5;
-        const maxY = Math.max(minY, zoneH - btnHeight + 5);
-
-        const targetX = minX + Math.random() * (maxX - minX);
-        const targetY = minY + Math.random() * (maxY - minY);
-        const randomRot = (Math.random() - 0.5) * 30;
+        // Bounded translation inside the middle container (no scale distortion!)
+        const maxTranslateX = (Math.random() - 0.5) * 120; // -60px to +60px
+        const maxTranslateY = (Math.random() - 0.5) * 36;  // -18px to +18px
 
         if (isFourthAttempt) {
           isFrozenState = true;
           showCustomToast("NO button stopped for 2.5s! ⏱️ Click it! 🎯");
           safeGsapTo(noBtn, {
-            left: targetX,
-            top: targetY,
-            rotation: 0,
+            x: maxTranslateX,
+            y: maxTranslateY,
             scale: 1,
+            rotation: 0,
             duration: 0.25,
             onComplete: () => {
               isDodging = false;
@@ -804,10 +789,10 @@
         } else {
           if (Math.random() > 0.4) showMemeToast();
           safeGsapTo(noBtn, {
-            left: targetX,
-            top: targetY,
-            rotation: randomRot,
-            scale: 0.95,
+            x: maxTranslateX,
+            y: maxTranslateY,
+            scale: 1,
+            rotation: (Math.random() - 0.5) * 10,
             duration: 0.35,
             ease: "back.out(1.5)",
             onComplete: () => { isDodging = false; }
@@ -816,6 +801,8 @@
 
       } else {
         // AFTER 7 CLICKS: FULL DISPLAY ROAMING (outside card, body level)
+        const btnWidth = noBtn.offsetWidth || 90;
+        const btnHeight = noBtn.offsetHeight || 44;
         const paddingX = 16;
         const paddingTop = 70;
         const paddingBottom = 25;
@@ -827,8 +814,6 @@
 
         const targetX = minX + Math.random() * (maxX - minX);
         const targetY = minY + Math.random() * (maxY - minY);
-        const randomRot = (Math.random() - 0.5) * 60;
-        const randomScale = 0.85 + Math.random() * 0.3;
 
         if (!isFixedMode) {
           const initialRect = noBtn.getBoundingClientRect();
@@ -850,8 +835,8 @@
             top: targetY,
             x: 0,
             y: 0,
-            rotation: 0,
             scale: 1,
+            rotation: 0,
             duration: 0.25,
             onComplete: () => {
               isDodging = false;
@@ -868,8 +853,8 @@
             top: targetY,
             x: 0,
             y: 0,
-            rotation: randomRot,
-            scale: randomScale,
+            scale: 1,
+            rotation: (Math.random() - 0.5) * 15,
             duration: 0.4,
             ease: "back.out(1.5)",
             onComplete: () => { isDodging = false; }
@@ -886,7 +871,7 @@
       const btnCenterY = rect.top + rect.height / 2;
       const dist = Math.hypot(clientX - btnCenterX, clientY - btnCenterY);
 
-      if (dist < 100) {
+      if (dist < 90) {
         dodgeNoButton();
       }
     }
