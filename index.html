@@ -717,17 +717,24 @@
       isDodging = true;
       playBoingSound();
 
-      const maxX = Math.min(window.innerWidth / 2 - 60, 200);
-      const maxY = Math.min(window.innerHeight / 2 - 60, 200);
-      const randomX = (Math.random() - 0.5) * maxX * 1.5;
-      const randomY = (Math.random() - 0.5) * maxY * 1.5;
-      const randomRot = (Math.random() - 0.5) * 180;
+      const zone = document.getElementById('button-zone');
+      const zoneWidth = zone ? zone.clientWidth : 320;
+      const noWidth = noBtn ? noBtn.offsetWidth : 90;
+
+      // Ensure NO button never moves out of the card boundary
+      // x = 0 is default right-aligned position. x < 0 shifts left inside card.
+      const minX = -(zoneWidth - noWidth - 15);
+      const maxX = 0; // Never shift right past card edge
+      
+      const randomX = minX + Math.random() * (maxX - minX);
+      const randomY = (Math.random() - 0.5) * 50;
+      const randomRot = (Math.random() - 0.5) * 45;
 
       safeGsapTo(noBtn, {
         x: randomX,
         y: randomY,
         rotation: randomRot,
-        scale: 0.85,
+        scale: 0.9,
         duration: 0.35,
         onComplete: () => { isDodging = false; }
       });
