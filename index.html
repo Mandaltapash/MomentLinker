@@ -773,7 +773,9 @@
       playCheerMelody();
       const toVal = encodeURIComponent(document.getElementById('input-to').value.trim() || "Friend");
       const fromVal = encodeURIComponent(document.getElementById('input-from').value.trim() || "Me");
-      const phoneVal = encodeURIComponent(document.getElementById('input-phone').value.trim() || "");
+      const noteVal = encodeURIComponent(document.getElementById('input-note').value.trim() || "Lots of fun!");
+      const phoneVal = encodeURIComponent((document.getElementById('input-phone').value || "").trim());
+      const themeVal = document.getElementById('input-theme').value;
 
       const baseUrl = window.location.origin + window.location.pathname;
       let finalUrl = `${baseUrl}?type=${selectedOccasion}&to=${toVal}&from=${fromVal}&note=${noteVal}&theme=${themeVal}`;
