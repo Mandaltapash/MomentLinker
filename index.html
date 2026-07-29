@@ -1136,7 +1136,10 @@
           document.getElementById('card-title').innerHTML = `❤️ I KNEW IT!!<br>${recipientName} said YES to ${senderName}!`;
           document.getElementById('card-subtitle').innerText = "You just made my day! ✨";
           document.getElementById('planner-box').style.display = "block";
-          document.getElementById('btn-yes').innerText = "YES! Locked In ❤️";
+          
+          const yesBtnEl = document.getElementById('btn-yes');
+          yesBtnEl.innerText = "YES! Locked In ❤️";
+          yesBtnEl.onclick = lockDatePass; // Enable clicking YES! Locked In to lock date & open WhatsApp!
 
           const dateInput = document.getElementById('date-pick');
           const today = new Date();
@@ -1146,12 +1149,24 @@
       });
     }
 
-    // --- Dashboard & RSVP Response System ---
+    // --- Dashboard & RSVP Cloud Sync System ---
     function saveResponse(rsvpObj) {
       let responses = JSON.parse(localStorage.getItem('moment_linker_rsvps') || '[]');
       responses.unshift(rsvpObj);
       localStorage.setItem('moment_linker_rsvps', JSON.stringify(responses));
       updateDashboardBadge();
+
+      // Cloud Sync so Creator sees Friend's response globally on ANY device!
+      try {
+        fetch('https://api.restful-api.dev/objects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: "moment_linker_rsvp_" + (rsvpObj.sender || "general"),
+            data: rsvpObj
+          })
+        }).catch(() => {});
+      } catch(e) {}
     }
 
     function updateDashboardBadge() {
@@ -1181,8 +1196,44 @@
 
     function renderDashboardContent() {
       const container = document.getElementById('dash-responses-container');
-      const responses = JSON.parse(localStorage.getItem('moment_linker_rsvps') || '[]');
+      let localResponses = JSON.parse(localStorage.getItem('moment_linker_rsvps') || '[]');
 
+      container.innerHTML = `
+        <div style="text-align: center; padding: 20px 10px; opacity: 0.8;">
+          <div style="font-size: 1.8rem; margin-bottom: 6px;">🔄</div>
+          <p style="font-size: 0.9rem;">Syncing live RSVPs from cloud...</p>
+        </div>
+      `;
+
+      // Fetch Global Cloud RSVPs
+      fetch('https://api.restful-api.dev/objects')
+        .then(res => res.json())
+        .then(items => {
+          const cloudItems = (Array.isArray(items) ? items : [])
+            .filter(item => item && item.name && item.name.startsWith('moment_linker_rsvp_'))
+            .map(item => item.data)
+            .filter(Boolean);
+
+          const map = new Map();
+          [...cloudItems, ...localResponses].forEach(item => {
+            if (item && item.id) map.set(item.id, item);
+          });
+          const combined = Array.from(map.values());
+
+          if (combined.length > 0) {
+            localStorage.setItem('moment_linker_rsvps', JSON.stringify(combined));
+            updateDashboardBadge();
+          }
+
+          displayRsvpList(combined);
+        })
+        .catch(() => {
+          displayRsvpList(localResponses);
+        });
+    }
+
+    function displayRsvpList(responses) {
+      const container = document.getElementById('dash-responses-container');
       if (!responses || responses.length === 0) {
         container.innerHTML = `
           <div style="text-align: center; padding: 30px 10px; opacity: 0.7;">
@@ -1199,14 +1250,14 @@
         html += `
           <div class="dash-item">
             <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 4px; color: #ff477e;">
-              <span>🎉 ${item.recipient} accepted!</span>
-              <span style="font-size: 0.75rem; opacity: 0.7; color: inherit;">${item.timestamp}</span>
+              <span>🎉 ${item.recipient || "Friend"} accepted!</span>
+              <span style="font-size: 0.75rem; opacity: 0.7; color: inherit;">${item.timestamp || ""}</span>
             </div>
             <div style="font-size: 0.9rem; margin-bottom: 2px;">
-              <strong>Invitation:</strong> ${item.dateType} (From ${item.sender})
+              <strong>Invitation:</strong> ${item.dateType || "Date"} (From ${item.sender || "Me"})
             </div>
             <div style="font-size: 0.9rem; margin-bottom: 2px;">
-              <strong>📅 Date:</strong> ${item.date} | <strong>⏰ Time:</strong> ${item.time}
+              <strong>📅 Date:</strong> ${item.date || "Selected Date"} | <strong>⏰ Time:</strong> ${item.time || "Evening"}
             </div>
             <div style="font-size: 0.8rem; opacity: 0.85; margin-top: 4px;">
               Status: <span style="color: #10b981; font-weight: 700;">✅ Locked & Confirmed</span>
@@ -1236,7 +1287,7 @@
         timestamp: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
       };
 
-      // 1. Save to Dashboard
+      // 1. Save to Dashboard & Global Cloud Store
       saveResponse(rsvpData);
 
       // 2. Format WhatsApp Message using wa.me universal link
@@ -1264,12 +1315,10 @@
         `;
       }
 
-      // 4. Open WhatsApp directly via window.open / location
-      try {
-        window.open(whatsappUrl, '_blank');
-      } catch(e) {
+      // 4. Direct instant navigation to WhatsApp (100% Works without popup blocker!)
+      setTimeout(() => {
         window.location.href = whatsappUrl;
-      }
+      }, 200);
     }
 
     /* ==========================================================================
