@@ -1214,13 +1214,31 @@
       // 1. Save to Dashboard
       saveResponse(rsvpData);
 
-      // 2. Open WhatsApp for direct confirmation share!
+      // 2. Format WhatsApp Message
       const whatsappMsg = `Hey ${senderName}! ❤️ I accepted your ${dateType} invitation! 🎬✨\n\n📅 Date: ${dateVal}\n⏰ Time: ${timeVal}\n\nCan't wait! 🥰`;
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMsg)}`;
 
-      alert(`WOOHOO! Date pass locked & confirmed between ${senderName} and ${recipientName}! ❤️✨\n\nOpening WhatsApp to send confirmation to ${senderName}...`);
-      
-      window.open(whatsappUrl, '_blank');
+      // 3. Update Planner Box to Success State with 1-click WhatsApp Link
+      const plannerBox = document.getElementById('planner-box');
+      if (plannerBox) {
+        plannerBox.innerHTML = `
+          <div style="padding: 10px; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 6px;">🎉🎟️</div>
+            <h3 style="font-family: var(--font-heading); color: #10b981; margin-bottom: 6px;">DATE PASS CONFIRMED!</h3>
+            <p style="font-size: 0.85rem; opacity: 0.85; margin-bottom: 14px;">
+              Date: <strong>${dateVal}</strong> at <strong>${timeVal}</strong>
+            </p>
+            <a href="${whatsappUrl}" target="_blank" class="btn btn-yes" style="width: 100%; text-decoration: none; display: inline-flex; justify-content: center; align-items: center; gap: 8px; font-size: 1.05rem; padding: 12px; background: #25D366; color: white;">
+              💬 Confirm & Send on WhatsApp
+            </a>
+          </div>
+        `;
+      }
+
+      // 4. Direct instant redirect to WhatsApp (No alert blocker!)
+      setTimeout(() => {
+        window.location.href = whatsappUrl;
+      }, 300);
     }
 
     /* ==========================================================================
