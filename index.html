@@ -553,9 +553,15 @@
           <input type="text" id="input-note" placeholder="e.g. Popcorn and ice cream are on me!" value="I promise you'll have lots of fun!">
         </div>
 
-        <!-- Step 5: Color Theme -->
+        <!-- Step 5: WhatsApp Phone Number -->
         <div class="form-group">
-          <label>5. Select Theme</label>
+          <label>5. Your WhatsApp Number (Optional - for 1-tap direct reply)</label>
+          <input type="text" id="input-phone" placeholder="e.g. 919876543210 (Country Code + Phone Number)">
+        </div>
+
+        <!-- Step 6: Color Theme -->
+        <div class="form-group">
+          <label>6. Select Theme</label>
           <select id="input-theme" onchange="changeThemePreview(this.value)">
             <option value="pink">🌸 Soft Pink Romance</option>
             <option value="neon">🌌 Midnight Neon</option>
@@ -767,11 +773,11 @@
       playCheerMelody();
       const toVal = encodeURIComponent(document.getElementById('input-to').value.trim() || "Friend");
       const fromVal = encodeURIComponent(document.getElementById('input-from').value.trim() || "Me");
-      const noteVal = encodeURIComponent(document.getElementById('input-note').value.trim() || "Lots of fun!");
-      const themeVal = document.getElementById('input-theme').value;
+      const phoneVal = encodeURIComponent(document.getElementById('input-phone').value.trim() || "");
 
       const baseUrl = window.location.origin + window.location.pathname;
-      const finalUrl = `${baseUrl}?type=${selectedOccasion}&to=${toVal}&from=${fromVal}&note=${noteVal}&theme=${themeVal}`;
+      let finalUrl = `${baseUrl}?type=${selectedOccasion}&to=${toVal}&from=${fromVal}&note=${noteVal}&theme=${themeVal}`;
+      if (phoneVal) finalUrl += `&phone=${phoneVal}`;
 
       document.getElementById('share-url-input').value = finalUrl;
       document.getElementById('link-result-box').style.display = 'block';
@@ -1214,9 +1220,13 @@
       // 1. Save to Dashboard
       saveResponse(rsvpData);
 
-      // 2. Format WhatsApp Message
+      // 2. Format WhatsApp Message using wa.me universal link
+      const rawPhone = (urlParams.get('phone') || '').replace(/\D/g, '');
       const whatsappMsg = `Hey ${senderName}! ❤️ I accepted your ${dateType} invitation! 🎬✨\n\n📅 Date: ${dateVal}\n⏰ Time: ${timeVal}\n\nCan't wait! 🥰`;
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMsg)}`;
+      
+      const whatsappUrl = rawPhone 
+        ? `https://wa.me/${rawPhone}?text=${encodeURIComponent(whatsappMsg)}`
+        : `https://wa.me/?text=${encodeURIComponent(whatsappMsg)}`;
 
       // 3. Update Planner Box to Success State with 1-click WhatsApp Link
       const plannerBox = document.getElementById('planner-box');
@@ -1235,10 +1245,12 @@
         `;
       }
 
-      // 4. Direct instant redirect to WhatsApp (No alert blocker!)
-      setTimeout(() => {
+      // 4. Open WhatsApp directly via window.open / location
+      try {
+        window.open(whatsappUrl, '_blank');
+      } catch(e) {
         window.location.href = whatsappUrl;
-      }, 300);
+      }
     }
 
     /* ==========================================================================
