@@ -770,19 +770,36 @@
     }
 
     function generateShareableLink() {
-      playCheerMelody();
-      const toVal = encodeURIComponent(document.getElementById('input-to').value.trim() || "Friend");
-      const fromVal = encodeURIComponent(document.getElementById('input-from').value.trim() || "Me");
-      const noteVal = encodeURIComponent(document.getElementById('input-note').value.trim() || "Lots of fun!");
-      const phoneVal = encodeURIComponent((document.getElementById('input-phone').value || "").trim());
-      const themeVal = document.getElementById('input-theme').value;
+      try {
+        playCheerMelody();
+      } catch(e){}
+
+      const toInput = document.getElementById('input-to');
+      const fromInput = document.getElementById('input-from');
+      const noteInput = document.getElementById('input-note');
+      const phoneInput = document.getElementById('input-phone');
+      const themeInput = document.getElementById('input-theme');
+
+      const toVal = encodeURIComponent((toInput ? toInput.value : "").trim() || "Friend");
+      const fromVal = encodeURIComponent((fromInput ? fromInput.value : "").trim() || "Me");
+      const noteVal = encodeURIComponent((noteInput ? noteInput.value : "").trim() || "Lots of fun!");
+      const phoneVal = encodeURIComponent((phoneInput ? phoneInput.value : "").trim());
+      const themeVal = themeInput ? themeInput.value : "pink";
 
       const baseUrl = window.location.origin + window.location.pathname;
       let finalUrl = `${baseUrl}?type=${selectedOccasion}&to=${toVal}&from=${fromVal}&note=${noteVal}&theme=${themeVal}`;
       if (phoneVal) finalUrl += `&phone=${phoneVal}`;
 
-      document.getElementById('share-url-input').value = finalUrl;
-      document.getElementById('link-result-box').style.display = 'block';
+      const urlBox = document.getElementById('share-url-input');
+      const resultBox = document.getElementById('link-result-box');
+
+      if (urlBox) urlBox.value = finalUrl;
+      if (resultBox) {
+        resultBox.style.display = 'block';
+        setTimeout(() => {
+          resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
     }
 
     function copyShareUrl() {
